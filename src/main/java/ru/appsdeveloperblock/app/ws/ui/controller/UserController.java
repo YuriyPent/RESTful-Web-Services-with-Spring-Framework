@@ -1,9 +1,8 @@
 package ru.appsdeveloperblock.app.ws.ui.controller;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,15 +15,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.appsdeveloperblock.app.ws.exceptions.UserServiceException;
 import ru.appsdeveloperblock.app.ws.ui.model.request.UpdateUserDetailsRequestModel;
 import ru.appsdeveloperblock.app.ws.ui.model.request.UserDetailsRequestModel;
 import ru.appsdeveloperblock.app.ws.ui.model.response.UserRest;
+import ru.appsdeveloperblock.app.ws.userservice.UserService;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     Map<String, UserRest> users;
+
+    @Autowired
+    UserService userService;
 
     @GetMapping
     public String getUsers(
@@ -35,30 +39,24 @@ public class UserController {
         return "get users was called with page = "
                 + page + " and limit = " + limit + " and sort = " + sort;
     }
-
     @GetMapping(
             path = "/{userId}",
             produces = {
                 MediaType.APPLICATION_XML_VALUE,
                 MediaType.APPLICATION_JSON_VALUE
             })
-
     public ResponseEntity<UserRest> getUser(
-            @PathVariable String userId) 
-    {
-        String firstname = null;
-        //
-        //
-        int firstnameLenght = firstname.length();
-        
+            @PathVariable String userId) {
+        if (true) {
+            throw new UserServiceException("A user service exception is thrown");
+        }
+
         if (users.containsKey(userId)) {
             return new ResponseEntity<>(users.get(userId), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
-
     }
-
     @PostMapping(
             consumes = {
                 MediaType.APPLICATION_XML_VALUE,
@@ -70,20 +68,10 @@ public class UserController {
     public ResponseEntity<UserRest> createUser(
             @Valid
             @RequestBody UserDetailsRequestModel userDetails) {
-        UserRest returnValue = new UserRest();
-        returnValue.setEmail(userDetails.getEmail());
-        returnValue.setFirstname(userDetails.getFirstname());
-        returnValue.setLastname(userDetails.getLastname());
-
-        String userId = UUID.randomUUID().toString();
-        returnValue.setUserId(userId);
-        if (users == null) {
-            users = new HashMap<>();
-            users.put(userId, returnValue);
-        }
-        return new ResponseEntity<UserRest>(returnValue, HttpStatus.OK);
+        
+        UserRest returnValue = userService.createUser(userDetails);
+        return new ResponseEntity<>(returnValue, HttpStatus.OK);
     }
-
     @PutMapping(
             path = "/{userId}",
             consumes = {
